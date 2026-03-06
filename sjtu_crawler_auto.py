@@ -342,8 +342,8 @@ async def main():
     print(f"{'='*60}")
 
     # 保存JSON文件
-    output_path = '/workspace/output/all_venues_booking_data.json'
-    Path('/workspace/output').mkdir(exist_ok=True)
+    output_path = 'output/all_venues_booking_data.json'
+    Path('output').mkdir(exist_ok=True)
 
     output_data = {
         'query_time': datetime.now().isoformat(),
