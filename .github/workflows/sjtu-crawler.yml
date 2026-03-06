@@ -23,6 +23,10 @@ jobs:
         run: |
           pip install playwright requests
           playwright install chromium --with-deps
+      
+      - name: 创建输出目录
+        run: mkdir -p output
+  
 
       - name: 运行爬虫脚本
         env:
