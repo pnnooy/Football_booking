@@ -3,6 +3,8 @@ name: SJTU体育场地数据同步
 on:
   schedule:
     - cron: '*/15 * * * *'
+    - cron: '2,17,32,47 * * * *'
+    - cron: '5,20,35,50 * * * *'
   workflow_dispatch:
 
 jobs:
