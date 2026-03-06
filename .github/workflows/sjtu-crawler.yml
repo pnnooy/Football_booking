@@ -12,6 +12,20 @@ jobs:
       - name: 检出代码
         uses: actions/checkout@v4
 
+      - name: 诊断目录结构
+        run: |
+          echo "=== github.workspace ==="
+          echo ${{ github.workspace }}
+          echo ""
+          echo "=== github.repository ==="
+          echo ${{ github.repository }}
+          echo ""
+          echo "=== 根目录文件 ==="
+          ls -la
+          echo ""
+          echo "=== 递归查找所有文件 ==="
+          find . -type f -name "*.py" 2>/dev/null | head -20
+
       - name: 设置Python
         uses: actions/setup-python@v5
         with:
@@ -22,47 +36,13 @@ jobs:
           pip install playwright requests
           playwright install chromium --with-deps
 
-      - name: 查看目录结构
-        run: ls -la
-
-      - name: 查找爬虫脚本
-        id: find-script
-        run: |
-          SCRIPT_PATH=$(find . -name "sjtu_crawler_auto.py" -type f 2>/dev/null | head -1)
-          echo "找到脚本: $SCRIPT_PATH"
-          echo "script_path=$SCRIPT_PATH" >> $GITHUB_OUTPUT
-          echo "script_dir=$(dirname $SCRIPT_PATH)" >> $GITHUB_OUTPUT
-
-      - name: 创建输出目录
-        run: mkdir -p output
-
-      - name: 运行爬虫脚本
+      - name: 运行爬虫
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
         run: |
-          cd ${{ steps.find-script.outputs.script_dir }}
+          SCRIPT=$(find . -name "sjtu_crawler_auto.py" -type f | head -1)
+          echo "运行脚本: $SCRIPT"
+          SCRIPT_DIR=$(dirname "$SCRIPT")
+          cd "$SCRIPT_DIR"
           python3 sjtu_crawler_auto.py
-
-      - name: 查找输出文件
-        id: find-output
-        run: |
-          echo "开始查找输出文件..."
-          find . -type f -name "*.json" 2>/dev/null | head -20
-          OUTPUT_PATH=$(find . -name "all_venues_booking_data.json" -type f 2>/dev/null | head -1)
-          if [ -z "$OUTPUT_PATH" ]; then
-            echo "警告: 未找到输出文件，尝试其他位置..."
-            SCRIPT_DIR=${{ steps.find-script.outputs.script_dir }}
-            if [ -n "$SCRIPT_DIR" ] && [ -f "$SCRIPT_DIR/output/all_venues_booking_data.json" ]; then
-              OUTPUT_PATH="$SCRIPT_DIR/output/all_venues_booking_data.json"
-            fi
-          fi
-          echo "最终输出路径: $OUTPUT_PATH"
-          echo "output_path=$OUTPUT_PATH" >> $GITHUB_OUTPUT
-
-      - name: 上传数据作为artifact
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: venue-data
-          path: ${{ steps.find-output.outputs.output_path }}
